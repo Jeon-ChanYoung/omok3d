@@ -1,0 +1,72 @@
+.root {
+    -fx-background-color: #fbf6f2;
+    -fx-font-size: 14px;
+}
+
+.label {
+    -fx-text-fill: #5b5170;
+}
+
+.status-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.hint {
+    -fx-text-fill: #9a8fb5;
+    -fx-font-size: 12px;
+}
+
+.panel {
+    -fx-background-color: white;
+    -fx-background-radius: 22;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(120, 100, 160, 0.18), 20, 0, 0, 4);
+}
+
+.view-pane {
+    -fx-background-color: white;
+    -fx-background-radius: 22;
+    -fx-effect: dropshadow(gaussian, rgba(120, 100, 160, 0.18), 20, 0, 0, 4);
+}
+
+.button {
+    -fx-background-color: #ece3f9;
+    -fx-text-fill: #5b5170;
+    -fx-background-radius: 14;
+    -fx-padding: 7 16 7 16;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #dccdf3;
+}
+
+.button:pressed {
+    -fx-background-color: #c9b5ec;
+}
+
+.button:focused {
+    -fx-background-insets: 0;
+}
+
+.button.accent {
+    -fx-background-color: #ffc9d6;
+}
+
+.button.accent:hover {
+    -fx-background-color: #ffb3c5;
+}
+
+.slider .track {
+    -fx-background-color: #ece3f9;
+    -fx-background-radius: 6;
+    -fx-pref-height: 6;
+}
+
+.slider .thumb {
+    -fx-background-color: #b9a2e8;
+    -fx-background-radius: 12;
+    -fx-pref-width: 20;
+    -fx-pref-height: 20;
+}

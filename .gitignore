@@ -1,0 +1,26 @@
+# Maven 빌드 결과
+target/
+
+# IDE / 에디터
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+bin/
+out/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 로그 / 크래시 덤프
+*.log
+hs_err_pid*
+
+# Copilot 업그레이드 도구가 만든 폴더 (프로젝트와 무관)
+.github/modernize/

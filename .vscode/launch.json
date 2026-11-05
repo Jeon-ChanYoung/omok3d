@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "3D 오목 실행",
+      "request": "launch",
+      "mainClass": "omok3d.Launcher",
+      "projectName": "omok3d"
+    }
+  ]
+}
