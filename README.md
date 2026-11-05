@@ -1,11 +1,21 @@
 # 3D 오목 (omok3d)
 
+## 미리보기
+<img src="assets/result1.png" alt="게임 미리보기" width="400" height="auto">
+
 ## 실행 방법
 
 | 도구 | 버전 | 확인 |
 |---|---|---|
 | JDK | 17 이상 (21 권장) | `java -version` |
-| Maven | 3.9 이상 | `mvn -v` |
+| Maven | 3.9 이상 | `mvn -v` |   
+  
+<br>
+
+Maven 없으면  
+https://maven.apache.org/download.cgi#CurrentMaven 에서  
+**apache-maven-3.10.0-bin** 파일 다운 후 압축 풀고  
+환경변수 경로 설정 ex) C:\tools\maven\apache-maven-3.10.0\bin
 
 ### 실행
 
@@ -17,8 +27,7 @@ mvn javafx:run
 ### VSCode에서 실행
 
 1. 확장 **Extension Pack for Java**를 설치
-2. `F5` 또는 실행 및 디버그 → **3D 오목 실행**을 선택합니다.
-   - 진입점은 `Launcher` 클래스입니다. `App`을 직접 실행하면 "JavaFX runtime components are missing" 오류가 날 수 있습니다.
+2. src/main/java/Launcher.java 실행
 
 ## 프로젝트 구조
 
