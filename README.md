@@ -10,13 +10,13 @@
 ### 실행
 
 ```bash
-git clone <저장소 주소>
+git clone "https://github.com/Jeon-ChanYoung/omok3d.git"
 cd omok3d
 mvn javafx:run
 ```
 ### VSCode에서 실행
 
-1. 확장 **Extension Pack for Java**를 설치합니다 (폴더를 열면 추천 팝업이 뜹니다).
+1. 확장 **Extension Pack for Java**를 설치
 2. `F5` 또는 실행 및 디버그 → **3D 오목 실행**을 선택합니다.
    - 진입점은 `Launcher` 클래스입니다. `App`을 직접 실행하면 "JavaFX runtime components are missing" 오류가 날 수 있습니다.
 
@@ -39,4 +39,4 @@ omok3d/
 └─ .vscode/                        VSCode 공용 설정
 ```
 
-**게임 규칙은 `Board`, 화면은 `App`**으로 분리합니다. 규칙을 바꿀 때는 `Board`와 `BoardTest`만 건드리면 됩니다.
+**게임 규칙은 `Board`, 화면은 `App`**으로 분리됨. 규칙을 바꿀 때는 `Board`와 `BoardTest` 수정
