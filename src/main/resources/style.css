@@ -1,72 +1,121 @@
+/* Light pastel theme: rounded lavender pills on a warm cream background */
 .root {
-    -fx-background-color: #fbf6f2;
+    -fx-font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", "Segoe UI", sans-serif;
     -fx-font-size: 14px;
 }
 
 .label {
-    -fx-text-fill: #5b5170;
-}
-
-.status-label {
-    -fx-font-size: 20px;
-    -fx-font-weight: bold;
+    -fx-text-fill: #5b52c9;
 }
 
 .hint {
-    -fx-text-fill: #9a8fb5;
+    -fx-text-fill: rgba(110, 100, 160, 0.75);
     -fx-font-size: 12px;
 }
 
-.panel {
-    -fx-background-color: white;
-    -fx-background-radius: 22;
-    -fx-padding: 18;
-    -fx-effect: dropshadow(gaussian, rgba(120, 100, 160, 0.18), 20, 0, 0, 4);
+/* Icons are filled with this color (see Icons.java) */
+.icon {
+    -fx-background-color: #5b52c9;
 }
 
-.view-pane {
-    -fx-background-color: white;
-    -fx-background-radius: 22;
-    -fx-effect: dropshadow(gaussian, rgba(120, 100, 160, 0.18), 20, 0, 0, 4);
+/* ---------- Pills (top bar) ---------- */
+.pill {
+    -fx-background-color: linear-gradient(to bottom, #f9f6ff, #e4dcfb);
+    -fx-background-radius: 40;
+    -fx-border-color: linear-gradient(to bottom right, rgba(255, 255, 255, 0.95), #c6bbf2);
+    -fx-border-width: 2.5;
+    -fx-border-radius: 40;
+    -fx-padding: 10 24 10 24;
+    -fx-effect: dropshadow(gaussian, rgba(140, 120, 220, 0.30), 14, 0.1, 0, 4);
 }
 
-.button {
-    -fx-background-color: #ece3f9;
-    -fx-text-fill: #5b5170;
-    -fx-background-radius: 14;
-    -fx-padding: 7 16 7 16;
+.pill-pink {
+    -fx-border-color: linear-gradient(to right, #f4b8e8, #b8a9f6);
+}
+
+.pill-number {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5b52c9;
+}
+
+.pill-text {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6d65c9;
+}
+
+/* Round icon buttons (settings, undo, redo, stats, restart) */
+.button.icon-button {
+    -fx-padding: 14 22 14 22;
     -fx-cursor: hand;
 }
 
-.button:hover {
-    -fx-background-color: #dccdf3;
+.button.icon-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #fffdff, #eee8ff);
 }
 
-.button:pressed {
-    -fx-background-color: #c9b5ec;
+.button.icon-button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #e4dcfb, #d6ccf7);
 }
 
-.button:focused {
+.button.icon-button:disabled {
+    -fx-opacity: 0.45;
+}
+
+.button.icon-button:focused {
     -fx-background-insets: 0;
 }
 
-.button.accent {
-    -fx-background-color: #ffc9d6;
+/* Black/white stone toggle */
+.toggle-pill {
+    -fx-padding: 8 10 8 10;
 }
 
-.button.accent:hover {
-    -fx-background-color: #ffb3c5;
+.toggle-option {
+    -fx-background-radius: 30;
+    -fx-padding: 8 14 8 14;
+    -fx-cursor: hand;
 }
 
-.slider .track {
-    -fx-background-color: #ece3f9;
-    -fx-background-radius: 6;
-    -fx-pref-height: 6;
+.toggle-option:selected {
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+    -fx-effect: dropshadow(gaussian, rgba(140, 120, 220, 0.35), 8, 0.1, 0, 2);
 }
 
-.slider .thumb {
-    -fx-background-color: #b9a2e8;
-    -fx-background-radius: 12;
-    -fx-pref-width: 20;
-    -fx-pref-height: 20;
+/* ---------- Popup cards (settings, stats) ---------- */
+.popup-card {
+    -fx-background-color: #f8f5ff;
+    -fx-background-radius: 24;
+    -fx-border-color: #c6bbf2;
+    -fx-border-width: 2.5;
+    -fx-border-radius: 24;
+    -fx-padding: 16 20 16 20;
+}
+
+.chip {
+    -fx-background-color: linear-gradient(to bottom, #f9f6ff, #e9e2fc);
+    -fx-text-fill: #5b52c9;
+    -fx-background-radius: 20;
+    -fx-border-color: #cfc5f4;
+    -fx-border-radius: 20;
+    -fx-padding: 6 16 6 16;
+    -fx-cursor: hand;
+}
+
+.chip:hover {
+    -fx-background-color: #ece6ff;
+}
+
+.chip.chip-accent {
+    -fx-background-color: linear-gradient(to bottom, #8f84e6, #6c61d6);
+    -fx-text-fill: white;
+    -fx-border-color: #6c61d6;
+}
+
+.tooltip {
+    -fx-background-color: #5b52c9;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+    -fx-font-size: 12px;
 }

@@ -1,93 +1,189 @@
 package omok3d;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class BoardTest {
-    Board b;
+    Board board;
 
     @BeforeEach
     void setUp() {
-        b = new Board();
+        board = new Board();
+    }
+
+    /** Stacks `height` white stones in column (x, z) to build a support. */
+    void fill(int x, int z, int height) {
+        for (int i = 0; i < height; i++) board.place(x, z, 2);
+    }
+
+    // ---------- gravity ----------
+
+    @Test
+    void stonesStackFromTheBottomLayer() {
+        assertEquals(0, board.place(3, 4, 1));
+        assertEquals(1, board.place(3, 4, 2));
+        assertEquals(2, board.place(3, 4, 1));
+        assertEquals(1, board.get(3, 0, 4));
+        assertEquals(2, board.get(3, 1, 4));
+        assertEquals(1, board.get(3, 2, 4));
+        assertEquals(0, board.get(3, 3, 4));
     }
 
     @Test
-    void 이미_돌이_있는_칸과_범위_밖에는_둘_수_없다() {
-        assertTrue(b.place(1, 1, 1, 1));
-        assertFalse(b.place(1, 1, 1, 2));
-        assertFalse(b.place(-1, 0, 0, 1));
-        assertFalse(b.place(0, 0, Board.N, 1));
+    void otherColumnsAreUnaffected() {
+        board.place(3, 4, 1);
+        assertEquals(0, board.dropY(4, 4));
+        assertEquals(1, board.dropY(3, 4));
     }
 
     @Test
-    void 돌이_없으면_승리가_아니다() {
-        assertNull(b.findWin(1));
-        assertEquals(-1, b.checkWin(2));
+    void cannotPlaceOutOfRangeOrInFullColumn() {
+        assertEquals(-1, board.place(-1, 0, 1));
+        assertEquals(-1, board.place(0, Board.N, 1));
+        for (int i = 0; i < Board.N; i++) assertEquals(i, board.place(0, 0, i % 2 + 1));
+        assertEquals(-1, board.dropY(0, 0));
+        assertEquals(-1, board.place(0, 0, 1));
     }
 
     @Test
-    void 한_층에서_가로_5목이면_승리() {
-        for (int x = 0; x < 5; x++) b.place(x, 4, 7, 1);
-        Board.Win w = b.findWin(1);
-        assertNotNull(w);
-        assertEquals(5, w.cells().size());
+    void removeTopUndoesTheLastStoneOfAColumn() {
+        assertEquals(-1, board.removeTop(2, 2));
+        board.place(2, 2, 1);
+        board.place(2, 2, 2);
+        assertEquals(1, board.removeTop(2, 2));
+        assertEquals(0, board.get(2, 1, 2));
+        assertEquals(1, board.get(2, 0, 2));
+        assertEquals(1, board.dropY(2, 2));
     }
 
     @Test
-    void 깊이가_달라도_앞에서_볼때_5목이면_승리() {
-        // x는 연속, y는 같고, z는 제각각 -> z축으로 투영하면 가로 5목
-        for (int i = 0; i < 5; i++) b.place(3 + i, 4, i * 3, 1);
-        Board.Win w = b.findWin(1);
-        assertNotNull(w);
-        assertEquals(2, w.axis());
-        assertEquals(5, w.stones().size());
+    void removeTopWorksOnAFullColumn() {
+        for (int i = 0; i < Board.N; i++) board.place(0, 0, 1);
+        assertEquals(Board.N - 1, board.removeTop(0, 0));
+        assertEquals(Board.N - 1, board.dropY(0, 0));
+    }
+
+    // ---------- winning ----------
+
+    @Test
+    void noStonesMeansNoWin() {
+        assertNull(board.findWin(1));
+        assertNull(board.findWin(2));
     }
 
     @Test
-    void 대각선_투영도_승리() {
-        for (int i = 0; i < 5; i++) b.place(i, i, i, 1);
-        assertNotNull(b.findWin(1));
+    void fiveInARowOnTheFloorWins() {
+        for (int x = 0; x < 5; x++) board.place(x, 7, 1);
+        Board.Win win = board.findWin(1);
+        assertNotNull(win);
+        assertEquals(5, win.stones().size());
+        assertArrayEquals(new int[]{1, 0, 0}, win.dir());
     }
 
     @Test
-    void 네_개는_승리가_아니다() {
-        for (int x = 0; x < 4; x++) b.place(x, 0, 0, 1);
-        assertNull(b.findWin(1));
+    void fiveInARowAlongDepthWins() {
+        for (int z = 3; z < 8; z++) board.place(5, z, 1);
+        assertNotNull(board.findWin(1));
     }
 
     @Test
-    void 상대_돌은_투영에서_무시된다() {
-        b.place(0, 0, 0, 1);
-        b.place(1, 0, 0, 1);
-        b.place(2, 0, 0, 2);   // 상대 돌이 중간에 있어도
-        b.place(2, 0, 5, 1);   // 다른 층의 내 돌로 이어짐
-        b.place(3, 0, 0, 1);
-        b.place(4, 0, 0, 1);
-        assertNotNull(b.findWin(1));
-        assertNull(b.findWin(2));
+    void fiveStackedInOneColumnWins() {
+        for (int i = 0; i < 5; i++) board.place(9, 9, 1);
+        Board.Win win = board.findWin(1);
+        assertNotNull(win);
+        assertArrayEquals(new int[]{0, 1, 0}, win.dir());
     }
 
     @Test
-    void 판_가장자리를_넘어_이어지는_줄은_승리가_아니다() {
-        b.place(17, 0, 0, 1);
-        b.place(18, 0, 0, 1);
-        b.place(0, 0, 0, 1);
-        b.place(1, 0, 0, 1);
-        b.place(2, 0, 0, 1);
-        assertNull(b.findWin(1));
+    void floorDiagonalWins() {
+        for (int i = 0; i < 5; i++) board.place(i, i, 1);
+        assertNotNull(board.findWin(1));
     }
 
     @Test
-    void clear하면_초기화된다() {
-        for (int x = 0; x < 5; x++) b.place(x, 0, 0, 1);
-        b.clear();
-        assertNull(b.findWin(1));
-        assertTrue(b.place(0, 0, 0, 1));
+    void verticalPlaneDiagonalWins() {
+        for (int i = 0; i < 5; i++) {
+            fill(i, 0, i);
+            board.place(i, 0, 1);
+        }
+        assertNull(board.findWin(2));
+        Board.Win win = board.findWin(1);
+        assertNotNull(win);
+        assertArrayEquals(new int[]{1, 1, 0}, win.dir());
+    }
+
+    @Test
+    void spaceDiagonalWins() {
+        for (int i = 0; i < 5; i++) {
+            fill(i, i, i);
+            board.place(i, i, 1);
+        }
+        assertNull(board.findWin(2));
+        Board.Win win = board.findWin(1);
+        assertNotNull(win);
+        assertArrayEquals(new int[]{1, 1, 1}, win.dir());
+    }
+
+    @Test
+    void projectionWithoutConnectionIsNotAWin() {
+        // x is consecutive but heights are scattered: looks like a row from the front, but not connected
+        int[] heights = {0, 3, 1, 4, 2};
+        for (int i = 0; i < 5; i++) {
+            fill(i, 0, heights[i]);
+            board.place(i, 0, 1);
+        }
+        assertNull(board.findWin(1));
+    }
+
+    @Test
+    void gapOrOpponentStoneBreaksTheLine() {
+        board.place(0, 0, 1);
+        board.place(1, 0, 1);
+        board.place(2, 0, 2);
+        board.place(3, 0, 1);
+        board.place(4, 0, 1);
+        assertNull(board.findWin(1));
+
+        board.clear();
+        for (int x : new int[]{0, 1, 3, 4, 5}) board.place(x, 0, 1);
+        assertNull(board.findWin(1));
+    }
+
+    @Test
+    void fourIsNotAWin() {
+        for (int x = 0; x < 4; x++) board.place(x, 0, 1);
+        assertNull(board.findWin(1));
+    }
+
+    @Test
+    void lineDoesNotWrapAroundTheEdge() {
+        for (int x : new int[]{17, 18, 0, 1, 2}) board.place(x, 0, 1);
+        assertNull(board.findWin(1));
+    }
+
+    @Test
+    void sixOrMoreStillWinsAndReturnsTheWholeLine() {
+        for (int x = 0; x < 6; x++) board.place(x, 0, 1);
+        Board.Win win = board.findWin(1);
+        assertNotNull(win);
+        assertEquals(6, win.stones().size());
+    }
+
+    @Test
+    void thereAreThirteenDirections() {
+        assertEquals(13, Board.DIRS.length);
+    }
+
+    @Test
+    void clearResetsTheBoard() {
+        for (int x = 0; x < 5; x++) board.place(x, 0, 1);
+        board.clear();
+        assertNull(board.findWin(1));
+        assertEquals(0, board.place(0, 0, 1));
     }
 }

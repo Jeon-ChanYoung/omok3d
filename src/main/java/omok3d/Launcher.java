@@ -1,9 +1,9 @@
 package omok3d;
 
 /**
- * IDE(VSCode 등)나 fat-jar 실행용 진입점.
- * Application을 상속한 클래스를 직접 실행하면 "JavaFX runtime components are missing"
- * 오류가 날 수 있어서, 상속하지 않는 별도 main을 둔다.
+ * Entry point for running from an IDE (e.g. VSCode) or a fat jar.
+ * Running a class that extends Application directly can fail with
+ * "JavaFX runtime components are missing", so this separate main is used instead.
  */
 public final class Launcher {
     private Launcher() {}
