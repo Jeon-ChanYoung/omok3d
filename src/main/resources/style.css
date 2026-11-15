@@ -1,7 +1,10 @@
 /* Light pastel theme: rounded lavender pills on a warm cream background */
 .root {
-    -fx-font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", "Segoe UI", sans-serif;
-    -fx-font-size: 14px;
+    /* Rounded, chunky fonts. "Jua" is used if resources/fonts/Jua-Regular.ttf exists;
+       otherwise the first installed font from the list is used. */
+    -fx-font-family: "Jua", "BM JUA_TTF", "Gaegu", "Comic Sans MS", "Segoe UI Black", "Malgun Gothic", sans-serif;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
 }
 
 .label {
@@ -9,8 +12,8 @@
 }
 
 .hint {
-    -fx-text-fill: rgba(110, 100, 160, 0.75);
-    -fx-font-size: 12px;
+    -fx-text-fill: rgba(110, 100, 160, 0.85);
+    -fx-font-size: 14px;
 }
 
 /* Icons are filled with this color (see Icons.java) */
@@ -34,13 +37,13 @@
 }
 
 .pill-number {
-    -fx-font-size: 30px;
+    -fx-font-size: 36px;
     -fx-font-weight: bold;
     -fx-text-fill: #5b52c9;
 }
 
 .pill-text {
-    -fx-font-size: 16px;
+    -fx-font-size: 19px;
     -fx-font-weight: bold;
     -fx-text-fill: #6d65c9;
 }
@@ -117,5 +120,5 @@
     -fx-background-color: #5b52c9;
     -fx-text-fill: white;
     -fx-background-radius: 10;
-    -fx-font-size: 12px;
+    -fx-font-size: 14px;
 }

@@ -11,11 +11,13 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point3D;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.AmbientLight;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -32,6 +34,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.PickResult;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -51,8 +54,11 @@ import javafx.scene.shape.MeshView;
 import javafx.scene.shape.SVGPath;
 import javafx.scene.shape.Sphere;
 import javafx.scene.shape.TriangleMesh;
+import javafx.scene.text.Font;
 import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Scale;
 import javafx.stage.Popup;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -130,6 +136,10 @@ public class App extends Application {
     final Rotate rx = new Rotate(INIT_RX, Rotate.X_AXIS);
     final Rotate ry = new Rotate(INIT_RY, Rotate.Y_AXIS);
     PerspectiveCamera cam;
+    SubScene sub3d;
+    double zoom = 1.0;                 // user zoom (mouse wheel) on top of the auto-fit distance
+    double fitDist = 1000, fitX = 0, fitY = -60;   // camera placement that keeps the whole board in view
+    double uiTop = 260;                // vertical space taken by the top bar (px), kept free of the board
     Sphere ghost;
     Box wood, rim;
     final PhongMaterial[] stoneMat = new PhongMaterial[3];
@@ -160,6 +170,7 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         css = getClass().getResource("/style.css").toExternalForm();
+        loadFonts();
         createMaterials();
         clock.setCycleCount(Animation.INDEFINITE);
 
@@ -168,6 +179,9 @@ public class App extends Application {
         Label hint = new Label(Strings.HINT);
         hint.getStyleClass().add("hint");
         hint.setMouseTransparent(true);
+        hint.setWrapText(true);
+        hint.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        hint.setMaxWidth(900);
         StackPane.setAlignment(hint, Pos.BOTTOM_CENTER);
         StackPane.setMargin(hint, new Insets(0, 0, 16, 0));
 
@@ -179,11 +193,32 @@ public class App extends Application {
         updateTimeLabel();
         if (!START_CLOCK_ON_FIRST_MOVE) clock.play();
 
-        Scene scene = new Scene(root, 1240, 900);
+        // Never open larger than the usable screen area (taskbar excluded), so nothing is cut off
+        Rectangle2D vb = Screen.getPrimary().getVisualBounds();
+        double w = Math.min(1240, vb.getWidth() * 0.92);
+        double h = Math.min(900, vb.getHeight() * 0.88);
+        Scene scene = new Scene(root, w, h);
         scene.getStylesheets().add(css);
+        stage.setMinWidth(Math.min(720, vb.getWidth()));
+        stage.setMinHeight(Math.min(560, vb.getHeight()));
         stage.setTitle("3D Omok");
         stage.setScene(scene);
         stage.show();
+        fitCamera();
+    }
+
+    /**
+     * Loads rounded fonts from resources/fonts/ if present (Jua-Regular.ttf, Gaegu-Bold.ttf, ...).
+     * Without them, style.css falls back to fonts installed on the system.
+     */
+    void loadFonts() {
+        for (String f : new String[]{"Jua-Regular.ttf", "Gaegu-Bold.ttf", "Gaegu-Regular.ttf"}) {
+            try (java.io.InputStream in = App.class.getResourceAsStream("/fonts/" + f)) {
+                if (in != null) Font.loadFont(in, 12);
+            } catch (java.io.IOException ignored) {
+                // font is optional
+            }
+        }
     }
 
     /** Creates stone/ghost materials; uses images/stone_black.png and stone_white.png if present. */
@@ -211,8 +246,8 @@ public class App extends Application {
         buildWorld();
 
         cam = new PerspectiveCamera(true);
-        cam.setTranslateZ(-1000);
-        cam.setTranslateY(-60);   // moves the board slightly lower on screen, below the top bar
+        cam.setTranslateZ(-fitDist);   // distance/offset are recomputed by fitCamera() to fit the window
+        cam.setTranslateY(fitY);
         cam.setNearClip(1);
         cam.setFarClip(5000);
 
@@ -225,6 +260,9 @@ public class App extends Application {
         SubScene sub = new SubScene(root3d, 1240, 900, true, SceneAntialiasing.BALANCED);
         sub.setCamera(cam);
         sub.setFill(Color.TRANSPARENT);   // the background layer shows through
+        sub3d = sub;
+        sub.widthProperty().addListener((o, a, b) -> fitCamera());
+        sub.heightProperty().addListener((o, a, b) -> fitCamera());
 
         sub.setOnMousePressed(e -> {
             dragX = pressX = e.getSceneX();
@@ -251,32 +289,79 @@ public class App extends Application {
         });
         sub.setOnMouseExited(e -> setHover(-1, -1));
         sub.setOnScroll(e -> {
-            double z = cam.getTranslateZ() + e.getDeltaY() * 1.5;
-            cam.setTranslateZ(Math.max(-2200, Math.min(-450, z)));
+            zoom = Math.max(0.4, Math.min(2.0, zoom * Math.exp(-e.getDeltaY() * 0.0015)));
+            applyCamera();
         });
         return sub;
     }
 
+    /** Screen-space bounding box {minX, maxX, minY, maxY} of the board for a camera at (cx, cy, -d). */
+    double[] projectBoard(double d, double cx, double cy, double w, double h) {
+        double f = (h / 2) / Math.tan(Math.toRadians(15));   // default vertical FOV of PerspectiveCamera is 30 deg
+        double half = (N - 1) * S / 2 + MARGIN + RIM;
+        double a = Math.toRadians(rx.getAngle()), b = Math.toRadians(ry.getAngle());
+        double minX = Double.MAX_VALUE, maxX = -Double.MAX_VALUE, minY = Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
+        for (int sx = -1; sx <= 1; sx += 2)
+            for (int sz = -1; sz <= 1; sz += 2)
+                for (double y : new double[]{-TOP, THICK}) {
+                    double x = sx * half, z = sz * half;
+                    double x2 = x * Math.cos(b) + z * Math.sin(b);
+                    double z2 = -x * Math.sin(b) + z * Math.cos(b);
+                    double y3 = y * Math.cos(a) - z2 * Math.sin(a);
+                    double z3 = y * Math.sin(a) + z2 * Math.cos(a);
+                    double depth = z3 + d;
+                    double px = w / 2 + f * (x2 - cx) / depth;
+                    double py = h / 2 + f * (y3 - cy) / depth;
+                    minX = Math.min(minX, px);
+                    maxX = Math.max(maxX, px);
+                    minY = Math.min(minY, py);
+                    maxY = Math.max(maxY, py);
+                }
+        return new double[]{minX, maxX, minY, maxY};
+    }
+
+    /** Picks the camera distance/offset so the whole board fits below the top bar for the current window size. */
+    void fitCamera() {
+        if (sub3d == null) return;
+        double w = sub3d.getWidth(), h = sub3d.getHeight();
+        if (w < 50 || h < 50) return;
+        double side = 24, bottom = 44;
+        double availW = Math.max(100, w - 2 * side);
+        double availH = Math.max(100, h - uiTop - bottom);
+        double lo = 300, hi = 6000;
+        for (int i = 0; i < 40; i++) {
+            double mid = (lo + hi) / 2;
+            double[] bb = projectBoard(mid, 0, 0, w, h);
+            if (bb[1] - bb[0] <= availW && bb[3] - bb[2] <= availH) hi = mid;
+            else lo = mid;
+        }
+        double d = hi, cx = 0, cy = 0;
+        double f = (h / 2) / Math.tan(Math.toRadians(15));
+        for (int i = 0; i < 6; i++) {   // center the board in the free area
+            double[] bb = projectBoard(d, cx, cy, w, h);
+            cx -= (w / 2 - (bb[0] + bb[1]) / 2) * d / f;
+            cy -= (uiTop + availH / 2 - (bb[2] + bb[3]) / 2) * d / f;
+        }
+        fitDist = d;
+        fitX = cx;
+        fitY = cy;
+        applyCamera();
+    }
+
+    void applyCamera() {
+        cam.setTranslateZ(-fitDist * zoom);
+        cam.setTranslateX(fitX * zoom);
+        cam.setTranslateY(fitY * zoom);
+    }
+
     /**
-     * Builds the board: soft shadow, rim, wooden top, grid lines, star points.
+     * Builds the board: rim, wooden top, grid lines, star points.
      * Optional textures: images/board_top.png (top face) and images/board_side.png (rim).
      */
     void buildWorld() {
         double half = (N - 1) * S / 2;
         double w = 2 * (half + MARGIN);
         double boardW = w + 2 * RIM;
-
-        // Soft shadow under the board
-        double shadowW = boardW / 0.6;
-        Box shadow = new Box(shadowW, 0.2, shadowW);
-        PhongMaterial shadowMat = new PhongMaterial(Color.WHITE);
-        shadowMat.setDiffuseMap(Assets.softShadow(256));
-        shadow.setMaterial(shadowMat);
-        shadow.setTranslateY(THICK + 0.6);
-        shadow.setTranslateX(8);
-        shadow.setTranslateZ(14);
-        shadow.setMouseTransparent(true);
-        world.getChildren().add(shadow);
 
         // Rim (slightly wider and lower than the top)
         rim = new Box(boardW, THICK, boardW);
@@ -495,7 +580,28 @@ public class App extends Application {
         overlay.setPadding(new Insets(26, 40, 0, 40));
         overlay.setAlignment(Pos.TOP_LEFT);
         overlay.setPickOnBounds(false);   // clicks outside the pills pass through to the 3D view
-        return overlay;
+
+        // Shrink the whole top bar when the window is narrower than the bar, so nothing is cut off
+        Pane host = new Pane(overlay);
+        host.setPickOnBounds(false);
+        Scale scale = new Scale(1, 1, 0, 0);
+        overlay.getTransforms().add(scale);
+        Runnable relayout = () -> {
+            double pw = overlay.prefWidth(-1), ph = overlay.prefHeight(-1);
+            overlay.resize(pw, ph);
+            double k = host.getWidth() > 0 ? Math.min(1.0, host.getWidth() / pw) : 1.0;
+            scale.setX(k);
+            scale.setY(k);
+            double top = ph * k + 8;
+            if (Math.abs(top - uiTop) > 0.5) {
+                uiTop = top;
+                fitCamera();
+            }
+        };
+        host.widthProperty().addListener((o, a, b) -> relayout.run());
+        host.heightProperty().addListener((o, a, b) -> relayout.run());
+        Platform.runLater(relayout);
+        return host;
     }
 
     /** Rounded lavender pill containing the given nodes. */
@@ -567,7 +673,7 @@ public class App extends Application {
         Button def = new Button(Strings.VIEW_DEFAULT);
         def.getStyleClass().addAll("chip", "chip-accent");
         def.setFocusTraversable(false);
-        def.setOnAction(e -> animateTo(INIT_RX, INIT_RY));
+        def.setOnAction(e -> { zoom = 1.0; animateTo(INIT_RX, INIT_RY); applyCamera(); });
         row.getChildren().add(def);
         return row;
     }

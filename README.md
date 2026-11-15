@@ -1,7 +1,7 @@
 # 3D 오목 (omok3d)
 
 ## 미리보기
-<img src="assets/result1.png" alt="게임 미리보기" width="400" height="auto">
+<img src="assets/result2.png" alt="게임 미리보기" width="400" height="auto">
 
 ## 실행 방법
 
@@ -47,5 +47,3 @@ omok3d/
 ├─ .github/                        CI(GitHub Actions), PR 템플릿
 └─ .vscode/                        VSCode 공용 설정
 ```
-
-**게임 규칙은 `Board`, 화면은 `App`**으로 분리됨. 규칙을 바꿀 때는 `Board`와 `BoardTest` 수정
