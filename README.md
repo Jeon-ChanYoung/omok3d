@@ -37,13 +37,13 @@ omok3d/
 ├─ src/
 │  ├─ main/
 │  │  ├─ java/omok3d/
-│  │  │  ├─ Board.java             19³ 보드, 착수, 투영 기반 승리 판정 (UI와 무관한 순수 로직)
-│  │  │  ├─ App.java               JavaFX UI (3D 뷰, 평면도, 미니맵, 입력 처리)
-│  │  │  └─ Launcher.java          IDE/jar 실행용 진입점
+│  │  │  ├─ Board.java             19³ 보드, 착수, 나란히 나열시 승리 판정 
+│  │  │  ├─ App.java               JavaFX UI (3D 뷰,  입력 처리)
+│  │  │  └─ Launcher.java          게임 실행용 
 │  │  └─ resources/
-│  │     └─ style.css              UI 스타일 (파스텔 테마)
+│  │     └─ style.css              UI 스타일
 │  └─ test/java/omok3d/
 │     └─ BoardTest.java            승리 판정 단위 테스트
-├─ .github/                        CI(GitHub Actions), PR 템플릿
-└─ .vscode/                        VSCode 공용 설정
+├─ .github/                       
+└─ .vscode/                        
 ```
